@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OLX Ads</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h1>OLX Ads</h1>
+  <table id="ads-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>URL</th>
+        <th>Views</th>
+        <th>Timestamp</th>
+        <th>Native ID</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch('/ads')
+      .then(res => res.json())
+      .then(ads => {
+        const tbody = document.querySelector('#ads-table tbody');
+        ads.forEach(ad => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${ad.title || ''}</td>
+            <td><a href="${ad.url}" target="_blank">${ad.url}</a></td>
+            <td>${Array.isArray(ad.views) ? ad.views.map(v => `
+              <div>${v.viewed_at ? new Date(v.viewed_at).toLocaleString() : ''} - ${v.count}</div>
+            `).join('') : ad.views || ''}</td>
+            <td>${ad.timestamp ? new Date(ad.timestamp).toLocaleString() : ''}</td>
+            <td>${ad.native_id || ''}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => console.error('Error fetching ads:', err));
+  </script>
+</body>
+</html>
