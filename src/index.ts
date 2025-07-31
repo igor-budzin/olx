@@ -11,8 +11,6 @@ dotenv.config({ path: '../.env' });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const adStore = container.adStore;
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,6 +1,5 @@
 import { container } from '../container';
-import { AdData } from '../types';
-import { fetchAdViews } from '../parser.js';
+import { fetchAdViews } from '../parser';
 
 const adStore = container.adStore;
 

@@ -7,7 +7,7 @@ export interface IDataStore<T> {
 }
 
 // Firestore implementation
-import { db } from './firebase.js';
+import { db } from './firebase';
 import admin from 'firebase-admin';
 
 export class DataStore<T> implements IDataStore<T> {
