@@ -5,7 +5,6 @@ import fs from 'fs';
 import * as adsController from './ads/ads.controller';
 import * as reportController from './report/report.controller';
 import { health } from './health/health.controller';
-import { container } from './container';
 
 dotenv.config({ path: '../.env' });
 const app = express();
@@ -35,4 +34,7 @@ app.get('/', (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(process.env.NODE_ENV);
 });
+
+
