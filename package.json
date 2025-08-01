@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "start": "nodemon --watch src --ext ts --exec \"tsx src/index.ts\"",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --coverage"
   },
   "author": "",
   "license": "ISC",
@@ -25,11 +26,14 @@
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
+    "@types/request": "^2.48.8",
     "jest": "^30.0.5",
     "nodemon": "^3.1.10",
+    "tough-cookie": "4.1.3",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "uninstall": "^0.0.0"
   }
 }
