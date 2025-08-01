@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "start": "nodemon --watch src --ext ts --exec \"tsx src/index.ts\"",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --coverage"
   },
   "author": "",
   "license": "ISC",
