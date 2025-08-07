@@ -3,35 +3,52 @@ import { Notification, NotificationOptions, NotificationPayload } from './Notifi
 
 export class TelegramNotification implements Notification {
   private readonly bot: TelegramBot;
-  private readonly defaultChatId?: string;
 
   constructor(options: NotificationOptions) {
-    const botToken = options.botToken as string;
-    if (!botToken) {
-      throw new Error('Bot token is required for Telegram notifications');
+    const telegramOptions = options.options as { botInstance: TelegramBot };
+    if (!telegramOptions.botInstance) {
+      throw new Error('Bot instance is required for Telegram notifications');
     }
-    
-    this.bot = new TelegramBot(botToken, { polling: false });
-    this.defaultChatId = options.defaultRecipient;
+
+    this.bot = telegramOptions.botInstance;
   }
 
-  async sendMessage(payload: NotificationPayload, chatId?: string): Promise<boolean> {
+  async sendMessage(chatId: string, payload: NotificationPayload): Promise<boolean> {
     try {
-      const recipient = chatId || this.defaultChatId;
-      
-      if (!recipient) {
-        throw new Error('No chat ID provided for notification');
-      }
-
       const options: TelegramBot.SendMessageOptions = {
         parse_mode: (payload.additionalParams?.parseMode as any) || 'HTML',
         disable_notification: payload.additionalParams?.disableNotification
       };
 
-      await this.bot.sendMessage(recipient, payload.message, options);
+      await this.bot.sendMessage(chatId, payload.message, options);
       return true;
     } catch (error) {
       console.error('Failed to send notification:', error);
+      return false;
+    }
+  }
+
+  async sendImage(chatId: string, imageBuffer: Buffer, caption?: string): Promise<boolean> {
+    try {
+
+      // await this.bot.sendMessage(chatId, caption, { parse_mode: 'HTML' });
+
+      // Then send photos as an album (without captions)
+      // if ([imageBuffer, imageBuffer].length > 1) {
+      //   const mediaGroup: any = [imageBuffer, imageBuffer].map(buffer => ({
+      //     type: 'photo' as const,
+      //     media: buffer
+      //   }));
+
+      //   await this.bot.sendMediaGroup(chatId, mediaGroup);
+      // }
+      await this.bot.sendPhoto(chatId, imageBuffer, {
+        caption,
+        parse_mode: 'HTML'
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to send image notification:', error?.message);
       return false;
     }
   }

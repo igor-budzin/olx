@@ -1,9 +1,17 @@
+export interface User {
+  id: string;
+  first_name: string;
+  isActive: boolean;
+  registeredAt: number;
+}
+
 export interface AdData {
   url: string;
   views: { timestamp: number; count: number }[];
   timestamp?: number;
   title: string;
   nativeId: number | null;
+  ownerId: string;
 }
 
 export interface ParsedAdViews {
