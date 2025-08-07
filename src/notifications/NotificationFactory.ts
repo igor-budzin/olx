@@ -1,15 +1,16 @@
-import { Notification, NotificationOptions } from './Notification';
+import { Notification, NotificationOptions, NotificationType } from './Notification';
 import { TelegramNotification } from './TelegramNotification';
 
-export type NotificationType = 'telegram';
-
+/**
+ * Factory class to create notification instances based on the provided options.
+ */
 export class NotificationFactory {
-  static create(type: NotificationType, options: NotificationOptions): Notification {
-    switch (type) {
-      case 'telegram':
+  static create(options: NotificationOptions): Notification {
+    switch (options.type) {
+      case NotificationType.TELEGRAM:
         return new TelegramNotification(options);
       default:
-        throw new Error(`Notification type "${type}" is not supported`);
+        throw new Error(`Notification type "${options.type}" is not supported`);
     }
   }
 }

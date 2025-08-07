@@ -1,8 +1,6 @@
 import { container } from '../container';
 import { fetchAdViews } from '../parser';
 
-const adStore = container.adStore;
-
 export function updateViewsArray(
   oldViews: { timestamp: number; count: number }[],
   newView: { timestamp: number; count: number }
@@ -25,25 +23,27 @@ export function updateViewsArray(
 }
 
 export async function getAllAds() {
-  return adStore.getAll('ads');
+  return container.adRepository.getAllAds();
 }
 
 export async function createAd(adUrl: string) {
   const docId = encodeURIComponent(adUrl);
-  const existing = await adStore.get('ads', docId);
+  const existing = await container.adRepository.getAdById(docId);
   if (existing) throw new Error('Ad with this URL already exists');
-  await adStore.save('ads', docId, {
+  await container.adRepository.createAd({
+    ownerId: null, // This will be set later when the ad is claimed 
     url: adUrl,
     title: '',
     views: [],
     timestamp: Date.now(),
     nativeId: null,
   });
+    
   return docId;
 }
 
 export async function parseAllAds() {
-  const allAds = await adStore.getAll('ads');
+  const allAds = await container.adRepository.getAllAds();
   for (const ad of allAds) {
     const data = await fetchAdViews(ad.url);
     if (data) {
@@ -51,14 +51,14 @@ export async function parseAllAds() {
         timestamp: data.timestamp,
         count: data.views
       });
-      const updatedAd = {
-        ...ad,
+
+      await container.adRepository.updateAd(encodeURIComponent(ad.url), {
+       ...ad,
         title: ad.title || data.title || '',
         views: updatedViews,
         timestamp: ad.timestamp || data.timestamp,
         nativeId: ad.nativeId || data.nativeId || null,
-      };
-      await adStore.save('ads', encodeURIComponent(ad.url), updatedAd);
+      });
     }
   }
 }

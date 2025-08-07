@@ -1,21 +1,15 @@
 import { Request, Response } from 'express';
 import * as reportService from './report.service';
 import { container } from '../container';
-import { formatReportMessage } from '../utils/formatNotification';
+import { generateDaylyChart } from './report.service';
 
 export async function getDailyReport(req: Request, res: Response) {
   try {
-    const report = await reportService.getDailyReport();
+    await generateDaylyChart();
 
-    await container.notifications.sendMessage({
-      message: formatReportMessage('Щоденний звіт', JSON.stringify(report)),
-      additionalParams: {
-        parseMode: 'HTML'
-      }
-    });
-
-    res.json(report);
+    res.json({ status: 'success', message: 'Daily report generated successfully' });
   } catch (err: any) {
+    console.error('Error generating chart:', err);
     res.status(500).json({ error: err.message });
   }
 }
