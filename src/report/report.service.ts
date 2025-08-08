@@ -90,7 +90,7 @@ async function getGraphImage(labels: string[], counts: number[]) {
   return imageBuffer;
 }
 
-export async function generateDaylyChart(views: AdData['views'] = []) {
+export async function generateDaylyChart() {
   const users = await container.userRepository.getAllActiveUsers();
 
   for (const user of users) {

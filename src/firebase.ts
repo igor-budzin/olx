@@ -1,5 +1,8 @@
 import admin, { ServiceAccount } from 'firebase-admin';
 import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 let serviceAccount: ServiceAccount;
 
