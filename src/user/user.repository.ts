@@ -1,8 +1,10 @@
 // src/repositories/FirebaseUserRepository.ts
+import { injectable } from 'inversify';
 import { db } from '../firebase';
 import { User } from '../types';
 import admin from 'firebase-admin';
 
+@injectable()
 export class UserRepository {
   async createUser(user: User): Promise<void> {
     await db.collection('users').doc(user.id).set(user);

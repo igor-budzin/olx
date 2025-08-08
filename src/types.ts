@@ -1,6 +1,6 @@
 export interface User {
   id: string;
-  first_name: string;
+  firstName: string;
   isActive: boolean;
   registeredAt: number;
 }

@@ -1,15 +1,23 @@
-import { Request, Response } from 'express';
-import * as reportService from './report.service';
-import { container } from '../container';
-import { generateDaylyChart } from './report.service';
+import { Router, Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../inversify.types';
+import { ReportService } from './report.service';
 
-export async function getDailyReport(req: Request, res: Response) {
-  try {
-    await generateDaylyChart();
+@injectable()
+export class ReportController {
+  public router = Router();
 
-    res.json({ status: 'success', message: 'Daily report generated successfully' });
-  } catch (err: any) {
-    console.error('Error generating chart:', err);
-    res.status(500).json({ error: err.message });
+  constructor(@inject(TYPES.ReportService) private reportService: ReportService) {
+    this.router.get('/daily', this.getDailyReport.bind(this));
+  }
+
+  async getDailyReport(req: Request, res: Response): Promise<void> {
+    try {
+      await this.reportService.generateDailyChart();
+      res.json({ success: true, message: 'Daily reports generated and sent' });
+    } catch (error) {
+      console.error('Error generating daily reports:', error);
+      res.status(500).json({ success: false, error: 'Failed to generate reports' });
+    }
   }
 }
