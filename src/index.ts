@@ -1,14 +1,17 @@
+import 'reflect-metadata';
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
-import * as adsController from './ads/ads.controller';
-import * as reportController from './report/report.controller';
+import { AdController } from './ads/ads.controller';
 import { health } from './health/health.controller';
 import { apiKeyAuth } from './middleware/auth.middleware';
-import { container } from './container';
+import { container } from './inversify.config'; // Use the inversify container
 import { uk } from 'date-fns/locale'
 import { setDefaultOptions } from 'date-fns';
+import { ReportController } from './report/report.controller';
+import { TYPES } from './inversify.types';
+import { TelegramBotService } from './TelegramBot';
 
 setDefaultOptions({ locale: uk });
 
@@ -19,10 +22,8 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/ads', apiKeyAuth(), adsController.getAllAds);
-app.post('/ads', apiKeyAuth(), adsController.createAd);
-app.get('/parse', apiKeyAuth(), adsController.parseAds);
-app.get('/report/daily', apiKeyAuth(), reportController.getDailyReport);
+app.use('/ads', apiKeyAuth(), container.get(AdController).router);
+app.use('/report', apiKeyAuth(), container.get(ReportController).router);
 app.get('/health',  health);
 
 // Serve static HTML file at "/"
@@ -46,8 +47,8 @@ app.get('/', (_req, res) => {
 const gracefulShutdown = () => {
   console.log('Shutting down server...');
   
-  if (container.telegramBotService) {
-    container.telegramBotService.stop();
+  if (container.get<TelegramBotService>(TYPES.TelegramBotService)) {
+    container.get<TelegramBotService>(TYPES.TelegramBotService).stop();
   }
   
   process.exit(0);
@@ -63,7 +64,7 @@ app.listen(PORT, () => {
   
   // Start telegram bot after server is running
   try {
-    if (container.telegramBotService.start()) {
+    if (container.get<TelegramBotService>(TYPES.TelegramBotService).start()) {
       console.log('🤖 Telegram bot polling started');
     } else {
       console.warn('⚠️ Telegram bot polling could not be started');

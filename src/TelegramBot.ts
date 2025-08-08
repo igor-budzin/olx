@@ -1,25 +1,25 @@
+import { injectable, inject } from 'inversify';
 import TelegramBot from 'node-telegram-bot-api';
-import { db } from './firebase';
+import { TYPES } from './inversify.types';
+import { UserRepository } from './user/user.repository';
 
+@injectable()
 export class TelegramBotService {
   private bot: TelegramBot;
   private isRunning = false;
   private startTime: Date | null = null;
 
-  constructor(private readonly token: string) {
+  constructor(
+    private readonly token: string,
+    @inject(TYPES.UserRepository) private userRepository: UserRepository
+  ) {
     this.bot = new TelegramBot(this.token, { polling: false });
   }
 
-  /**
-   * Get the bot instance to share with other services
-   */
   public getBotInstance(): TelegramBot {
     return this.bot;
   }
 
-  /**
-   * Initialize and start the Telegram bot polling
-   */
   public start(): boolean {
     if (this.isRunning) {
       console.log('Telegram bot is already running');
@@ -45,16 +45,13 @@ export class TelegramBotService {
     }
   }
 
-  /**
-   * Stop the Telegram bot
-   */
   public stop(): boolean {
     if (!this.isRunning) {
       return false;
     }
 
     try {
-      // this.bot.stopPolling();
+      this.bot.stopPolling();
       this.isRunning = false;
       console.log('Telegram bot stopped');
       return true;
@@ -73,27 +70,23 @@ export class TelegramBotService {
   }
 
   private registerHandlers() {
-    // Handle /start command
     this.bot.onText(/\/start/, async (msg) => {
       const chatId = msg.chat.id.toString();
       const firstName = msg.from?.first_name;
 
       try {
-        // Store user in Firestore
-        await db.collection('users').doc(chatId).set({
+        await this.userRepository.createUser({
           id: chatId,
           firstName,
           registeredAt: Date.now(),
           isActive: true
-        }, { merge: true });
-
+        });
+        
         console.log(`User registered: ${firstName} (${chatId})`);
       } catch (error) {
         console.error('Error registering user:', error);
       }
     });
-
-    // Add more handlers here...
   }
 
   public async sendMessage(chatId: string, text: string, options = {}): Promise<boolean> {

@@ -1,5 +1,5 @@
 import puppeteer, { Browser } from 'puppeteer';
-import { AdData, ParsedAdViews } from './types';
+import { ParsedAdViews } from './types';
 
 export async function fetchAdViews(url: string): Promise<ParsedAdViews | null> {
   let browser: Browser | undefined;
