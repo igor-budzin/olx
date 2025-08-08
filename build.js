@@ -28,8 +28,9 @@ await esbuild.build({
   platform: 'node',
   target: 'node16',
   outdir: './dist',
-  format: 'esm',
+  format: 'esm', // Change back to ESM
   sourcemap: true,
+  // Make sure all problematic packages are external
   external: [
     // List external packages that shouldn't be bundled
     'express',
@@ -38,8 +39,23 @@ await esbuild.build({
     'dotenv',
     'puppeteer',
     'axios',
+    // Add any packages that use dynamic require
+    'chartjs-node-canvas',
+    'chart.js',
+    'canvas',
+    'chartjs-plugin-datalabels',
+    // Node built-ins
+    'path',
+    'fs',
+    'os',
+    'stream',
+    'url',
+    'util'
   ],
-  // Allow importing .js files from .ts files
+  // Add Node.js compatibility mode
+  define: {
+    'process.env.NODE_ENV': '"production"'
+  },
   resolveExtensions: ['.ts', '.js'],
   loader: {
     '.ts': 'ts'
