@@ -6,7 +6,7 @@ import { AdData } from '../types';
 
 @injectable()
 export class AdService {
-  constructor(@inject(TYPES.AdRepository) private adRepository: AdRepository) {}
+  constructor(@inject(TYPES.AdRepository) private adRepository: AdRepository) { }
 
   updateViewsArray(
     oldViews: { timestamp: number; count: number }[],
@@ -37,21 +37,22 @@ export class AdService {
     const docId = encodeURIComponent(adUrl);
     const existing = await this.adRepository.getAdById(docId);
     if (existing) throw new Error('Ad with this URL already exists');
-    
+
     await this.adRepository.createAd({
-      ownerId: null, // This will be set later when the ad is claimed 
+      ownerId: [], // This will be set later when the ad is claimed 
       url: adUrl,
       title: '',
       views: [],
       timestamp: Date.now(),
       nativeId: null,
     });
-      
+
     return docId;
   }
 
   async parseAllAds(): Promise<void> {
     const allAds = await this.adRepository.getAllAds();
+
     for (const ad of allAds) {
       const data = await fetchAdViews(ad.url);
       if (data) {

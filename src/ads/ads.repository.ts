@@ -51,7 +51,7 @@ export class AdRepository {
    */
   async getAdsByOwnerId(ownerId: string): Promise<AdData[]> {
     const snapshot = await db.collection(this.collectionName)
-      .where('ownerId', '==', ownerId)
+      .where('ownerId', 'array-contains', ownerId)
       .get();
       
     return snapshot.docs.map(doc => doc.data() as AdData);
@@ -86,36 +86,6 @@ export class AdRepository {
     await adRef.update({
       views: admin.firestore.FieldValue.arrayUnion(viewData),
       lastUpdated: now
-    });
-  }
-
-  /**
-   * Get ads that haven't been updated in a specified time period
-   */
-  async getStaleAds(maxAgeMs: number): Promise<AdData[]> {
-    const cutoffTime = Date.now() - maxAgeMs;
-    
-    const snapshot = await db.collection(this.collectionName)
-      .where('lastUpdated', '<', cutoffTime)
-      .get();
-      
-    return snapshot.docs.map(doc => doc.data() as AdData);
-  }
-
-  /**
-   * Remove an ad
-   */
-  async removeAd(adId: string): Promise<void> {
-    await db.collection(this.collectionName).doc(adId).delete();
-  }
-
-  /**
-   * Transfer ownership of an ad to another user
-   */
-  async transferOwnership(adId: string, newOwnerId: string): Promise<void> {
-    await db.collection(this.collectionName).doc(adId).update({
-      ownerId: newOwnerId,
-      lastUpdated: Date.now()
     });
   }
 }

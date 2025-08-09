@@ -8,9 +8,6 @@ import { inject, injectable } from 'inversify';
 import { AdRepository } from '../ads/ads.repository';
 import { Notification } from '../notifications/Notification';
 
-Chart.register(ChartDataLabels);
-
-
 @injectable()
 export class ReportService {
   private chartJSNodeCanvas: ChartJSNodeCanvas;
@@ -35,7 +32,7 @@ export class ReportService {
   async getGraphImage(labels: string[], counts: number[]): Promise<Buffer> {
     const configuration: ChartConfiguration = {
       type: 'line',
-      plugins: [ChartDataLabels], // Add plugin directly here
+      plugins: [ChartDataLabels],
       data: {
         labels: labels,
         datasets: [{
@@ -48,9 +45,9 @@ export class ReportService {
           pointStyle: 'circle',
           pointRadius: 6,
           pointHoverRadius: 8,
-          borderWidth: 3,          // Thicker line
-          pointBorderWidth: 2,     // Better point border
-          pointBackgroundColor: 'white', // White center in points
+          borderWidth: 3,
+          pointBorderWidth: 2,
+          pointBackgroundColor: 'white',
         }]
       },
       options: {
@@ -105,7 +102,6 @@ export class ReportService {
    * Generate and send daily chart reports to all active users
    */
   async generateDailyChart(): Promise<void> {
-    // Get the userRepository from the inversify container
     const users = await this.userRepository.getAllActiveUsers();
 
     for (const user of users) {
@@ -140,7 +136,7 @@ export class ReportService {
         const totalViews = ad.views.at(-1).count;
 
         const imageCaption = `${ad.title}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
-        await this.notificationService.sendImage(ad.ownerId, imageBuffer, imageCaption);
+        await this.notificationService.sendImage(user.id, imageBuffer, imageCaption);
       }
     }
   }
