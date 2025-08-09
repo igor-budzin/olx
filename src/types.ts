@@ -11,7 +11,7 @@ export interface AdData {
   timestamp?: number;
   title: string;
   nativeId: number | null;
-  ownerId: string;
+  ownerId: string[];
 }
 
 export interface ParsedAdViews {
