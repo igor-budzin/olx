@@ -12,6 +12,8 @@ export interface AdData {
   title: string;
   nativeId: number | null;
   ownerId: string[];
+  accountName: string;
+  location: string | null;
 }
 
 export interface ParsedAdViews {
@@ -20,4 +22,5 @@ export interface ParsedAdViews {
   timestamp: number;
   title: string;
   nativeId: number;
+  location: string;
 }
