@@ -26,4 +26,6 @@ if (!admin.apps.length) {
   });
 }
 
+admin.firestore().settings({ databaseId: process.env.FIREBASE_DATABASE_ID });
+
 export const db = admin.firestore();

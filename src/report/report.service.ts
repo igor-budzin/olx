@@ -107,6 +107,16 @@ export class ReportService {
     for (const user of users) {
       const allAds = await this.adRepository.getAdsByOwnerId(user.id);
 
+      const totalViews = allAds.reduce((sum, ad) => sum += ad.views.at(-1)?.count, 0);
+      const totalViewsOnToday = allAds.reduce((sum, ad) => {
+        return sum += ad.views.at(-1)?.count - (ad.views.at(-2)?.count || 0);
+      }, 0);
+      const adCount = allAds.length;
+
+      this.notificationService.sendMessage(user.id, {
+        message: `Щоденний звіт (${format(new Date(), 'EEEE dd.MM.yyyy')})\n\nУ вас ${adCount} оголошення\nПереглядів за сьогодні: ${totalViewsOnToday}\nПереглядів за весь час: ${totalViews}`
+      });
+
       for (const ad of allAds) {
         const viewsArr = Array.isArray(ad.views) ? ad.views : [];
 
@@ -135,7 +145,7 @@ export class ReportService {
         const todayViews = viewCounts.at(-1);
         const totalViews = ad.views.at(-1).count;
 
-        const imageCaption = `${ad.title}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
+        const imageCaption = `<b>${ad.title}</b>\nЛокація: ${ad.location}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
         await this.notificationService.sendImage(user.id, imageBuffer, imageCaption);
       }
     }

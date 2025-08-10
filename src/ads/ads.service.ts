@@ -67,6 +67,7 @@ export class AdService {
           views: updatedViews,
           timestamp: ad.timestamp || data.timestamp,
           nativeId: ad.nativeId || data.nativeId || null,
+          location: ad.location || data.location || ''
         });
       }
     }

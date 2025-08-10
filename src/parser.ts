@@ -23,11 +23,11 @@ export async function fetchAdViews(url: string): Promise<ParsedAdViews | null> {
     const title = await page.$eval('[data-testid="offer_title"] h4', el => (el as HTMLElement).innerText.trim());
     const nativeIdText = await page.$eval('[data-testid="ad-footer-bar-section"] span', el => (el as HTMLElement).innerText.trim());
     const nativeId = parseInt(nativeIdText.replace(/\D/g, ''), 10);
-
+    const location = await page.$eval('.qa-static-ad-map-container > img', el => (el as HTMLImageElement).alt.trim());
 
     console.log(`Parsed views for ${url}: ${views}`);
 
-    return { title, url, views, timestamp: Date.now(), nativeId };
+    return { title, url, views, timestamp: Date.now(), nativeId, location };
   } catch (err: any) {
     console.error(`Error parsing ${url}: ${err.message}`);
     return null;
