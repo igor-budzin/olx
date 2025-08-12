@@ -7,6 +7,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { inject, injectable } from 'inversify';
 import { AdRepository } from '../ads/ads.repository';
 import { Notification } from '../notifications/Notification';
+import { locationFormatter } from '../utils/location.formatter';
 
 @injectable()
 export class ReportService {
@@ -21,7 +22,7 @@ export class ReportService {
       chartCallback: (ChartJS) => {
       },
       width: 400,
-      height: 200,
+      height: 250,
       backgroundColour: 'white',
     });
   }
@@ -29,7 +30,7 @@ export class ReportService {
   /**
    * Generate chart image from labels and data points
    */
-  async getGraphImage(labels: string[], counts: number[]): Promise<Buffer> {
+  async getGraphImage(labels: string[], counts: number[], title: string): Promise<Buffer> {
     const configuration: ChartConfiguration = {
       type: 'line',
       plugins: [ChartDataLabels],
@@ -54,8 +55,8 @@ export class ReportService {
         devicePixelRatio: 2,
         scales: {
           y: {
-            max: Math.max(...counts) * 1.2, // Add 20% padding above max value
-            min: Math.min(...counts) - Math.max(Math.min(...counts) * 0.2, 2), // 20% less than minimum value, can go below zero
+            max: Math.floor(Math.max(...counts) * 1.4), // Add 40% padding above max value
+            min: Math.floor(Math.min(...counts) - Math.max(Math.min(...counts) * 0.2, 2)), // 20% less than minimum value, can go below zero
             beginAtZero: false, // Allow custom min value
             ticks: {
               precision: 0 // Show integers only
@@ -65,10 +66,15 @@ export class ReportService {
         plugins: {
           title: {
             display: true,
-            text: 'Статистика переглядів',
+            text: `Статистика переглядів\n${title}`,
+            padding: {
+              top: 10,
+              bottom: 40,
+            },
+            align: 'center',
             font: {
               size: 16,
-              weight: 'bold'
+              weight: 'bold',
             }
           },
           datalabels: {
@@ -120,6 +126,14 @@ export class ReportService {
       for (const ad of allAds) {
         const viewsArr = Array.isArray(ad.views) ? ad.views : [];
 
+        if (ad.views.length < 2) {
+          const text = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nЗамало даних для статистики`;
+          await this.notificationService.sendMessage(user.id, {
+            message: text
+          });
+          continue;
+        }
+
         const dateLabels: string[] = [];
         const viewCounts: number[] = [];
 
@@ -129,8 +143,8 @@ export class ReportService {
           const dateLabel = format(viewsArr.at(i * -1).timestamp, 'E dd.MM')
           dateLabels.push(dateLabel);
 
-          const totalViewsOnDayAtIndex = viewsArr.at(i * -1).count;
-          const totalViewsBeforeDayAtIndex = viewsArr.at(i * -1 - 1).count;
+          const totalViewsOnDayAtIndex = viewsArr.at(i * -1)?.count;
+          const totalViewsBeforeDayAtIndex = viewsArr.at(i * -1 - 1)?.count;
           const viewsOnDay = totalViewsOnDayAtIndex - totalViewsBeforeDayAtIndex;
 
           // console.log(`${ad.title} - ${dateLabel}: ${viewsOnDay} views`);
@@ -141,11 +155,11 @@ export class ReportService {
 
         viewCounts.reverse();
         dateLabels.reverse();
-        const imageBuffer = await this.getGraphImage(dateLabels, viewCounts);
+        const imageBuffer = await this.getGraphImage(dateLabels, viewCounts, ad.title);
         const todayViews = viewCounts.at(-1);
         const totalViews = ad.views.at(-1).count;
 
-        const imageCaption = `<b>${ad.title}</b>\nЛокація: ${ad.location}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
+        const imageCaption = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
         await this.notificationService.sendImage(user.id, imageBuffer, imageCaption);
       }
     }

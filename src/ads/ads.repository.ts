@@ -9,15 +9,15 @@ export class AdRepository {
    * Create a new ad or update if it already exists
    */
   async createAd(ad: AdData): Promise<void> {
-    const adId = ad.nativeId.toString();
+    const adId = ad.nativeId?.toString() ?? '';
     const now = Date.now();
-    
+
     // Set created timestamp if not exists
     if (!ad.timestamp) {
       ad.timestamp = now;
     }
-    
-    await db.collection(this.collectionName).doc(adId).set({
+
+    await db.collection(this.collectionName).doc(encodeURIComponent(ad.url)).set({
       ...ad,
       lastUpdated: now
     }, { merge: true });
@@ -28,11 +28,11 @@ export class AdRepository {
    */
   async getAdById(adId: string): Promise<AdData | null> {
     const doc = await db.collection(this.collectionName).doc(adId).get();
-    
+
     if (!doc.exists) {
       return null;
     }
-    
+
     return doc.data() as AdData;
   }
 
@@ -53,7 +53,7 @@ export class AdRepository {
     const snapshot = await db.collection(this.collectionName)
       .where('ownerId', 'array-contains', ownerId)
       .get();
-      
+
     return snapshot.docs.map(doc => doc.data() as AdData);
   }
 
@@ -71,17 +71,17 @@ export class AdRepository {
   async addViewToAd(adId: string, viewCount: number): Promise<void> {
     const adRef = db.collection(this.collectionName).doc(adId);
     const adDoc = await adRef.get();
-    
+
     if (!adDoc.exists) {
       throw new Error(`Ad with ID ${adId} not found`);
     }
-    
+
     const now = Date.now();
     const viewData = {
       timestamp: now,
       count: viewCount
     };
-    
+
     // Add to views array and update lastUpdated
     await adRef.update({
       views: admin.firestore.FieldValue.arrayUnion(viewData),
