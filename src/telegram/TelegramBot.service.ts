@@ -1,7 +1,7 @@
 import { injectable, inject } from 'inversify';
 import TelegramBot from 'node-telegram-bot-api';
-import { TYPES } from './inversify.types';
-import { UserRepository } from './user/user.repository';
+import { TYPES } from '../inversify.types';
+import { TelegramBotRouter } from './TelegramBot.router';
 
 @injectable()
 export class TelegramBotService {
@@ -11,7 +11,7 @@ export class TelegramBotService {
 
   constructor(
     private readonly token: string,
-    @inject(TYPES.UserRepository) private userRepository: UserRepository
+    @inject(TYPES.TelegramBotRouter) private botRouter: TelegramBotRouter
   ) {
     this.bot = new TelegramBot(this.token, { polling: false });
   }
@@ -30,11 +30,12 @@ export class TelegramBotService {
       // Stop any existing polling just to be safe
       this.bot.stopPolling();
 
-      // Start polling on the existing instance
+      // Register all handlers before starting polling
+      this.botRouter.registerHandlers(this.bot);
+      
+      // Start polling
       this.bot.startPolling();
-
-      // Register handlers after polling starts
-      this.registerHandlers();
+      
       this.isRunning = true;
       this.startTime = new Date();
       console.log('🤖 Telegram bot started successfully');
@@ -69,28 +70,13 @@ export class TelegramBotService {
     };
   }
 
-  private registerHandlers() {
-    this.bot.onText(/\/start/, async (msg) => {
-      const chatId = msg.chat.id.toString();
-      const firstName = msg.from?.first_name;
-
-      try {
-        await this.userRepository.createUser({
-          id: chatId,
-          firstName,
-          registeredAt: Date.now(),
-          isActive: true
-        });
-        
-        console.log(`User registered: ${firstName} (${chatId})`);
-      } catch (error) {
-        console.error('Error registering user:', error);
-      }
-    });
-  }
-
   public async sendMessage(chatId: string, text: string, options = {}): Promise<boolean> {
     try {
+      if (!text || text.trim() === '') {
+        console.error(`Cannot send empty message to ${chatId}`);
+        return false;
+      }
+      
       await this.bot.sendMessage(chatId, text, options);
       return true;
     } catch (error) {

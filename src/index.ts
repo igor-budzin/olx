@@ -11,7 +11,7 @@ import { uk } from 'date-fns/locale'
 import { setDefaultOptions } from 'date-fns';
 import { ReportController } from './report/report.controller';
 import { TYPES } from './inversify.types';
-import { TelegramBotService } from './TelegramBot';
+import { TelegramBotService } from './telegram/TelegramBot.service';
 
 setDefaultOptions({ locale: uk });
 

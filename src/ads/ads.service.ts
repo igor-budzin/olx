@@ -34,20 +34,28 @@ export class AdService {
   }
 
   async createAd(adUrl: string): Promise<string> {
-    const docId = encodeURIComponent(adUrl);
-    const existing = await this.adRepository.getAdById(docId);
-    if (existing) throw new Error('Ad with this URL already exists');
-
-    await this.adRepository.createAd({
-      ownerId: [], // This will be set later when the ad is claimed 
-      url: adUrl,
-      title: '',
-      views: [],
-      timestamp: Date.now(),
-      nativeId: null,
-    });
-
-    return docId;
+    try {
+      const docId = encodeURIComponent(adUrl);
+      const existing = await this.adRepository.getAdById(docId);
+      if (existing) throw new Error('Ad with this URL already exists');
+        console.log(`Creating ad for 111URL: ${adUrl}`);
+      await this.adRepository.createAd({
+        ownerId: [],
+        url: adUrl,
+        title: '',
+        views: [],
+        timestamp: Date.now(),
+        nativeId: null,
+        accountName: '',
+        location: ''
+      });
+  
+      return docId;
+    }
+    catch (err: any) {
+      console.error(`Error creating ad for URL: ${adUrl}`, err);
+      throw new Error('Failed to create ad');
+    }
   }
 
   async parseAllAds(): Promise<void> {

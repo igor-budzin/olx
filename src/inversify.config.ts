@@ -4,9 +4,10 @@ import { ReportModule } from './report/report.module';
 import { UserModule } from './user/user.module';
 import { TYPES } from './inversify.types';
 import dotenv from 'dotenv';
-import { TelegramBotService } from './TelegramBot';
+import { TelegramBotService } from './telegram/TelegramBot.service';
 import { NotificationFactory } from './notifications/NotificationFactory';
-import { NotificationType } from './notifications/Notification';
+import { NotificationType, Notification } from './notifications/Notification';
+import { TelegramBotRouter } from './telegram/TelegramBot.router';
 
 dotenv.config();
 
@@ -16,19 +17,29 @@ container.load(UserModule);
 container.load(AdModule);
 container.load(ReportModule);
 
-const telegramBotService = new TelegramBotService(
-  process.env.TELEGRAM_BOT_TOKEN,
-  container.get(TYPES.UserRepository)
-);
-const notificationService = NotificationFactory.create({
-  type: NotificationType.TELEGRAM,
-  options: {
-    botInstance: telegramBotService.getBotInstance()
-  }
-});
+container
+  .bind<TelegramBotRouter>(TYPES.TelegramBotRouter)
+  .to(TelegramBotRouter)
+  .inSingletonScope();
 
-// Bind the pre-created services as constant values
-container.bind(TYPES.TelegramBotService).toConstantValue(telegramBotService);
-container.bind(TYPES.NotificationService).toConstantValue(notificationService);
+container
+  .bind<TelegramBotService>(TYPES.TelegramBotService)
+  .toDynamicValue((context) => {
+    return new TelegramBotService(process.env.TELEGRAM_BOT_TOKEN || '', context.get(TYPES.TelegramBotRouter));
+  }).inSingletonScope();
+
+
+container
+  .bind<Notification>(TYPES.NotificationService)
+  .toDynamicValue((context) => {
+    return NotificationFactory.create({
+      type: NotificationType.TELEGRAM,
+      options: {
+        botInstance: context
+                      .get<TelegramBotService>(TYPES.TelegramBotService)
+                      .getBotInstance()
+      }
+    });
+  });
 
 export { container };
