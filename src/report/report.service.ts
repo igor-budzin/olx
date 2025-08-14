@@ -115,7 +115,7 @@ export class ReportService {
 
       const totalViews = allAds.reduce((sum, ad) => sum += ad.views.at(-1)?.count, 0);
       const totalViewsOnToday = allAds.reduce((sum, ad) => {
-        return sum += ad.views.at(-1)?.count - (ad.views.at(-2)?.count || 0);
+        return sum += ad.views.at(-1).viewOnDay;
       }, 0);
       const adCount = allAds.length;
 
@@ -142,21 +142,14 @@ export class ReportService {
         for (let i = 1; i <= PERIOD_DAYS; i++) {
           const dateLabel = format(viewsArr.at(i * -1).timestamp, 'E dd.MM')
           dateLabels.push(dateLabel);
-
-          const totalViewsOnDayAtIndex = viewsArr.at(i * -1)?.count;
-          const totalViewsBeforeDayAtIndex = viewsArr.at(i * -1 - 1)?.count;
-          const viewsOnDay = totalViewsOnDayAtIndex - totalViewsBeforeDayAtIndex;
-
-          // console.log(`${ad.title} - ${dateLabel}: ${viewsOnDay} views`);
-          // console.log(totalViewsOnDayAtIndex, totalViewsBeforeDayAtIndex, viewsOnDay);
-          // console.log('--------------------------------')
+          const viewsOnDay = viewsArr.at(i * -1).viewOnDay;
           viewCounts.push(viewsOnDay);
         }
 
         viewCounts.reverse();
         dateLabels.reverse();
         const imageBuffer = await this.getGraphImage(dateLabels, viewCounts, ad.title);
-        const todayViews = viewCounts.at(-1);
+        const todayViews = ad.views.at(-1).viewOnDay;
         const totalViews = ad.views.at(-1).count;
 
         const imageCaption = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;

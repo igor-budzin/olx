@@ -8,10 +8,10 @@ import { AdData } from '../types';
 export class AdService {
   constructor(@inject(TYPES.AdRepository) private adRepository: AdRepository) { }
 
-  updateViewsArray(
-    oldViews: { timestamp: number; count: number }[],
-    newView: { timestamp: number; count: number }
-  ): { timestamp: number; count: number }[] {
+  private updateViewsArray(
+    oldViews: AdData['views'][number][],
+    newView: AdData['views'][number]
+  ): AdData['views'][number][] {
     if (!Array.isArray(oldViews) || oldViews.length === 0) {
       return [newView];
     }
@@ -38,7 +38,7 @@ export class AdService {
       const docId = encodeURIComponent(adUrl);
       const existing = await this.adRepository.getAdById(docId);
       if (existing) throw new Error('Ad with this URL already exists');
-        console.log(`Creating ad for 111URL: ${adUrl}`);
+
       await this.adRepository.createAd({
         ownerId: [],
         url: adUrl,
@@ -62,20 +62,24 @@ export class AdService {
     const allAds = await this.adRepository.getAllAds();
 
     for (const ad of allAds) {
-      const data = await fetchAdViews(ad.url);
-      if (data) {
+      const parsedAd = await fetchAdViews(ad.url);
+
+      if (parsedAd) {
         const updatedViews = this.updateViewsArray(ad.views, {
-          timestamp: data.timestamp,
-          count: data.views
+          timestamp: parsedAd.timestamp,
+          count: parsedAd.totalViewsOnDay,
+          viewOnDay: ad.views.length > 0 ?
+            parsedAd.totalViewsOnDay - ad.views[ad.views.length - 1].count :
+            0
         });
 
         await this.adRepository.updateAd(encodeURIComponent(ad.url), {
           ...ad,
-          title: ad.title || data.title || '',
+          title: ad.title || parsedAd.title || '',
           views: updatedViews,
-          timestamp: ad.timestamp || data.timestamp,
-          nativeId: ad.nativeId || data.nativeId || null,
-          location: ad.location || data.location || ''
+          timestamp: ad.timestamp || parsedAd.timestamp,
+          nativeId: ad.nativeId || parsedAd.nativeId || null,
+          location: ad.location || parsedAd.location || ''
         });
       }
     }

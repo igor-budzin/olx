@@ -7,7 +7,7 @@ export interface User {
 
 export interface AdData {
   url: string;
-  views: { timestamp: number; count: number }[];
+  views: { timestamp: number; count: number, viewOnDay: number }[];
   timestamp?: number;
   title: string;
   nativeId: number | null;
@@ -18,7 +18,7 @@ export interface AdData {
 
 export interface ParsedAdViews {
   url: string;
-  views: number;
+  totalViewsOnDay: number;
   timestamp: number;
   title: string;
   nativeId: number;
