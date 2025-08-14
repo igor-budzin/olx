@@ -7,5 +7,7 @@ export const TYPES = {
   ReportController: Symbol.for('ReportController'),
   NotificationService: Symbol.for('NotificationService'),
   TelegramBotService: Symbol.for('TelegramBotService'),
-  TelegramBotRouter: Symbol.for('TelegramBotRouter')
+  TelegramBotRouter: Symbol.for('TelegramBotRouter'),
+  Logger: Symbol.for('Logger'),
+  LoggerFactory: Symbol.for('LoggerFactory')
 };

@@ -2,6 +2,7 @@ import { Container } from 'inversify';
 import { AdModule } from './ads/ads.module';
 import { ReportModule } from './report/report.module';
 import { UserModule } from './user/user.module';
+import { LoggerModule } from './logger/logger.module';
 import { TYPES } from './inversify.types';
 import dotenv from 'dotenv';
 import { TelegramBotService } from './telegram/TelegramBot.service';
@@ -13,6 +14,7 @@ dotenv.config();
 
 const container = new Container();
 
+container.load(LoggerModule); // Load the Logger module first since other modules might depend on it
 container.load(UserModule);
 container.load(AdModule);
 container.load(ReportModule);
@@ -25,7 +27,11 @@ container
 container
   .bind<TelegramBotService>(TYPES.TelegramBotService)
   .toDynamicValue((context) => {
-    return new TelegramBotService(process.env.TELEGRAM_BOT_TOKEN || '', context.get(TYPES.TelegramBotRouter));
+    return new TelegramBotService(
+      process.env.TELEGRAM_BOT_TOKEN || '', 
+      context.get(TYPES.TelegramBotRouter),
+      context.get(TYPES.LoggerFactory)
+    );
   }).inSingletonScope();
 
 

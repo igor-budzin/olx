@@ -26,13 +26,16 @@
     "inversify": "^7.7.0",
     "node-telegram-bot-api": "^0.66.0",
     "puppeteer": "^24.14.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "winston": "^3.17.0",
+    "winston-transport": "^4.9.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
     "@types/request": "^2.48.8",
+    "@types/winston": "^2.4.4",
     "esbuild": "^0.25.8",
     "jest": "^30.0.5",
     "nodemon": "^3.1.10",

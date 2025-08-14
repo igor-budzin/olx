@@ -12,6 +12,9 @@ import { setDefaultOptions } from 'date-fns';
 import { ReportController } from './report/report.controller';
 import { TYPES } from './inversify.types';
 import { TelegramBotService } from './telegram/TelegramBot.service';
+import { httpLogger } from './middleware/http-logger.middleware';
+import { errorHandler } from './middleware/error-handler.middleware';
+import { LoggerFactory } from './logger/logger.factory';
 
 setDefaultOptions({ locale: uk });
 
@@ -19,8 +22,13 @@ dotenv.config({ path: '../.env' });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Get logger
+const loggerFactory = container.get<LoggerFactory>(TYPES.LoggerFactory);
+const logger = loggerFactory.createLogger('App');
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(httpLogger);
 
 app.use('/ads', apiKeyAuth(), container.get(AdController).router);
 app.use('/report', apiKeyAuth(), container.get(ReportController).router);
@@ -56,17 +64,20 @@ const gracefulShutdown = () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
+// Error handler
+app.use(errorHandler);
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 
   try {
     if (container.get<TelegramBotService>(TYPES.TelegramBotService).start()) {
-      console.log('🤖 Telegram bot polling started');
+      logger.info('Telegram bot polling started');
     } else {
-      console.warn('⚠️ Telegram bot polling could not be started');
+      logger.warn('Telegram bot polling could not be started');
     }
   } catch (error) {
-    console.error('❌ Error starting Telegram bot polling:', error);
+    logger.error('Error starting Telegram bot polling', { error });
   }
 });
 
