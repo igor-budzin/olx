@@ -39,6 +39,8 @@ await esbuild.build({
     'dotenv',
     'puppeteer',
     'axios',
+    'winston',
+    'winston-transport',
     // Add any packages that use dynamic require
     'chartjs-node-canvas',
     'chart.js',
@@ -50,7 +52,7 @@ await esbuild.build({
     'os',
     'stream',
     'url',
-    'util'
+    'util',
   ],
   // Add Node.js compatibility mode
   define: {
