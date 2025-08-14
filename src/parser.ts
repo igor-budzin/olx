@@ -27,7 +27,7 @@ export async function fetchAdViews(url: string): Promise<ParsedAdViews | null> {
 
     console.log(`Parsed views for ${url}: ${views}`);
 
-    return { title, url, views, timestamp: Date.now(), nativeId, location };
+    return { title, url, totalViewsOnDay: views, timestamp: Date.now(), nativeId, location };
   } catch (err: any) {
     console.error(`Error parsing ${url}: ${err.message}`);
     return null;
