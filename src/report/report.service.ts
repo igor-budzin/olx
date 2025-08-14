@@ -8,15 +8,19 @@ import { inject, injectable } from 'inversify';
 import { AdRepository } from '../ads/ads.repository';
 import { Notification } from '../notifications/Notification';
 import { locationFormatter } from '../utils/location.formatter';
+import { ILogger } from '../logger/logger.interface';
+import { LoggerFactory } from '../logger/logger.factory';
 
 @injectable()
 export class ReportService {
   private chartJSNodeCanvas: ChartJSNodeCanvas;
+  private logger: ILogger;
 
   constructor(
     @inject(TYPES.UserRepository) private userRepository: UserRepository,
     @inject(TYPES.AdRepository) private adRepository: AdRepository,
-    @inject(TYPES.NotificationService) private notificationService: Notification
+    @inject(TYPES.NotificationService) private notificationService: Notification,
+    @inject(TYPES.LoggerFactory) loggerFactory: LoggerFactory
   ) {
     this.chartJSNodeCanvas = new ChartJSNodeCanvas({
       chartCallback: (ChartJS) => {
@@ -25,6 +29,8 @@ export class ReportService {
       height: 250,
       backgroundColour: 'white',
     });
+
+    this.logger = loggerFactory.createLogger('ReportService');
   }
 
   /**
@@ -108,53 +114,58 @@ export class ReportService {
    * Generate and send daily chart reports to all active users
    */
   async generateDailyChart(): Promise<void> {
-    const users = await this.userRepository.getAllActiveUsers();
+    try {
+      const users = await this.userRepository.getAllActiveUsers();
 
-    for (const user of users) {
-      const allAds = await this.adRepository.getAdsByOwnerId(user.id);
+      for (const user of users) {
+        const allAds = await this.adRepository.getAdsByOwnerId(user.id);
 
-      const totalViews = allAds.reduce((sum, ad) => sum += ad.views.at(-1)?.count, 0);
-      const totalViewsOnToday = allAds.reduce((sum, ad) => {
-        return sum += ad.views.at(-1).viewOnDay;
-      }, 0);
-      const adCount = allAds.length;
+        const totalViews = allAds.reduce((sum, ad) => sum += ad.views.at(-1)?.count, 0);
+        const totalViewsOnToday = allAds.reduce((sum, ad) => {
+          return sum += ad.views.at(-1).viewOnDay;
+        }, 0);
+        const adCount = allAds.length;
 
-      this.notificationService.sendMessage(user.id, {
-        message: `Щоденний звіт (${format(new Date(), 'EEEE dd.MM.yyyy')})\n\nУ вас ${adCount} оголошення\nПереглядів за сьогодні: ${totalViewsOnToday}\nПереглядів за весь час: ${totalViews}`
-      });
+        this.notificationService.sendMessage(user.id, {
+          message: `Щоденний звіт (${format(new Date(), 'EEEE dd.MM.yyyy')})\n\nУ вас ${adCount} оголошення\nПереглядів за сьогодні: ${totalViewsOnToday}\nПереглядів за весь час: ${totalViews}`
+        });
 
-      for (const ad of allAds) {
-        const viewsArr = Array.isArray(ad.views) ? ad.views : [];
+        for (const ad of allAds) {
+          const viewsArr = Array.isArray(ad.views) ? ad.views : [];
 
-        if (ad.views.length < 2) {
-          const text = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nЗамало даних для статистики`;
-          await this.notificationService.sendMessage(user.id, {
-            message: text
-          });
-          continue;
+          if (ad.views.length < 2) {
+            const text = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nЗамало даних для статистики`;
+            await this.notificationService.sendMessage(user.id, {
+              message: text
+            });
+            continue;
+          }
+
+          const dateLabels: string[] = [];
+          const viewCounts: number[] = [];
+
+          const PERIOD_DAYS = 5; // Number of days to show in the chart
+
+          for (let i = 1; i <= PERIOD_DAYS; i++) {
+            const dateLabel = format(viewsArr.at(i * -1).timestamp, 'E dd.MM')
+            dateLabels.push(dateLabel);
+            const viewsOnDay = viewsArr.at(i * -1).viewOnDay;
+            viewCounts.push(viewsOnDay);
+          }
+
+          viewCounts.reverse();
+          dateLabels.reverse();
+          const imageBuffer = await this.getGraphImage(dateLabels, viewCounts, ad.title);
+          const todayViews = ad.views.at(-1).viewOnDay;
+          const totalViews = ad.views.at(-1).count;
+
+          const imageCaption = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
+          await this.notificationService.sendImage(user.id, imageBuffer, imageCaption);
         }
-
-        const dateLabels: string[] = [];
-        const viewCounts: number[] = [];
-
-        const PERIOD_DAYS = 5; // Number of days to show in the chart
-
-        for (let i = 1; i <= PERIOD_DAYS; i++) {
-          const dateLabel = format(viewsArr.at(i * -1).timestamp, 'E dd.MM')
-          dateLabels.push(dateLabel);
-          const viewsOnDay = viewsArr.at(i * -1).viewOnDay;
-          viewCounts.push(viewsOnDay);
-        }
-
-        viewCounts.reverse();
-        dateLabels.reverse();
-        const imageBuffer = await this.getGraphImage(dateLabels, viewCounts, ad.title);
-        const todayViews = ad.views.at(-1).viewOnDay;
-        const totalViews = ad.views.at(-1).count;
-
-        const imageCaption = `<b>${ad.title}</b>\n${locationFormatter(ad.location)}\n\nПереглядів за сьогодні: ${todayViews}\nВсього переглядів: ${totalViews}`;
-        await this.notificationService.sendImage(user.id, imageBuffer, imageCaption);
       }
+    } catch (error) {
+      this.logger.error('Failed to generate daily chart', { error });
+      throw error;
     }
   }
 }
