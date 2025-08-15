@@ -67,7 +67,7 @@ export class OlxParserService {
    * Navigate to URL and scroll to ensure content is loaded
    */
   private async navigateTo(page: Page, url: string): Promise<void> {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 50000 });
     await page.evaluate(() => {
       window.scrollTo(0, 3000);
     });
