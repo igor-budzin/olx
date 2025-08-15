@@ -1,11 +1,10 @@
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../inversify.types';
-import { fetchAdViews } from '../parser';
 import { AdRepository } from './ads.repository';
 import { AdData } from '../types';
 import { LoggerFactory } from '../logger/logger.factory';
 import { ILogger } from '../logger/logger.interface';
-import { ca } from 'date-fns/locale';
+import { OlxParserService } from '../parser/parser.service';
 
 @injectable()
 export class AdService {
@@ -13,7 +12,8 @@ export class AdService {
 
   constructor(
     @inject(TYPES.AdRepository) private adRepository: AdRepository,
-    @inject(TYPES.LoggerFactory) private loggerFactory: LoggerFactory
+    @inject(TYPES.LoggerFactory) private loggerFactory: LoggerFactory,
+    @inject(TYPES.OlxParserService) private olxParserService: OlxParserService,
   ) {
     this.logger = loggerFactory.createLogger('AdService');
   }
@@ -79,7 +79,7 @@ export class AdService {
       const allAds = await this.adRepository.getAllAds();
   
       for (const ad of allAds) {
-        const parsedAd = await fetchAdViews(ad.url);
+        const parsedAd = await this.olxParserService.fetchAdViews(ad.url);
   
         if (parsedAd) {
           const updatedViews = this.updateViewsArray(ad.views, {
