@@ -9,15 +9,14 @@ export function httpLogger(req: Request, res: Response, next: NextFunction) {
   const logger = loggerFactory.createLogger('HTTP');
   
   res.on('finish', () => {
-    const duration = Date.now() - startTime;
-    const message = `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`;
+    const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
+    const message = `${req.method} ${req.originalUrl} ${res.statusCode} ${durationSec}s`;
     
     const logData = {
       method: req.method,
       url: req.originalUrl,
-      ip: req.ip,
       statusCode: res.statusCode,
-      responseTime: duration
+      responseTime: `${durationSec}s`
     };
     
     if (res.statusCode >= 500) {

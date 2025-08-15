@@ -9,6 +9,7 @@ import { TelegramBotService } from './telegram/TelegramBot.service';
 import { NotificationFactory } from './notifications/NotificationFactory';
 import { NotificationType, Notification } from './notifications/Notification';
 import { TelegramBotRouter } from './telegram/TelegramBot.router';
+import { ParserModule } from './parser/parser.module';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ container.load(LoggerModule); // Load the Logger module first since other module
 container.load(UserModule);
 container.load(AdModule);
 container.load(ReportModule);
+container.load(ParserModule);
 
 container
   .bind<TelegramBotRouter>(TYPES.TelegramBotRouter)
