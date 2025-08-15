@@ -86,7 +86,7 @@ export class AdService {
             timestamp: parsedAd.timestamp,
             count: parsedAd.totalViewsOnDay,
             viewOnDay: ad.views.length > 0 ?
-              parsedAd.totalViewsOnDay - ad.views[ad.views.length - 1].count :
+              parsedAd.totalViewsOnDay - ad.views[ad.views.length - 2].count :
               0
           });
   

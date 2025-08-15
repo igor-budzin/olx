@@ -22,7 +22,7 @@ export class LoggerService implements ILogger {
         const ctx = showContext ? `[${context || this.context}] ` : '';
         const metaStr = Object.keys(meta).length ? 
           `\n${JSON.stringify(meta, null, 2)}` : '';
-        return `${timestamp} ${level} ${ctx}${message}${metaStr}`;
+        return `[${timestamp}] [${level}] ${ctx}${message}${metaStr}`;
       })
     );
 

@@ -47,10 +47,7 @@ export class TelegramBotService {
       this.bot.startPolling();
       
       this.isRunning = true;
-      this.startTime = new Date();
-      this.logger.info('Telegram bot started successfully', {
-        startTime: this.startTime.toISOString()
-      });
+      this.logger.info('Telegram bot started successfully');
       return true;
     } catch (error) {
       this.logger.error('Failed to start Telegram bot', { error });
@@ -69,10 +66,7 @@ export class TelegramBotService {
       this.bot.stopPolling();
       this.isRunning = false;
       
-      const uptime = this.startTime ? 
-        Math.floor((Date.now() - this.startTime.getTime()) / 1000) : 0;
-      
-      this.logger.info('Telegram bot stopped', { uptime });
+      this.logger.info('Telegram bot stopped');
       return true;
     } catch (error) {
       this.logger.error('Failed to stop Telegram bot', { error });
