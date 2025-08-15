@@ -9,7 +9,7 @@ import { LoggerFactory } from '../logger/logger.factory';
 export class OlxParserService {
   private browser: Browser | null = null;
   private logger: ILogger;
-  private defaultTimeout: number = 50000;
+  private defaultTimeout: number = 15000;
   private maxParsingRetries: number = 3; // Maximum number of retries
   private retryDelayMs: number = 5000;   // Base delay between retries (5 seconds)
 
