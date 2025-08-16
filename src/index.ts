@@ -15,6 +15,7 @@ import { TelegramBotService } from './telegram/TelegramBot.service';
 import { httpLogger } from './middleware/http-logger.middleware';
 import { errorHandler } from './middleware/error-handler.middleware';
 import { LoggerFactory } from './logger/logger.factory';
+import { LoggerService } from './logger/logger.service';
 
 setDefaultOptions({ locale: uk });
 
@@ -51,11 +52,16 @@ app.get('/', (_req, res) => {
   });
 });
 
-const gracefulShutdown = () => {
+const gracefulShutdown = async () => {
   console.log('Shutting down server...');
 
   if (container.get<TelegramBotService>(TYPES.TelegramBotService)) {
     container.get<TelegramBotService>(TYPES.TelegramBotService).stop();
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    const loggerService = container.get<LoggerService>(TYPES.Logger);
+    await loggerService.flush();
   }
 
   process.exit(0);

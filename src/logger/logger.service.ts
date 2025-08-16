@@ -1,18 +1,25 @@
 import { injectable } from 'inversify';
 import winston from 'winston';
 import { ILogger } from './logger.interface';
+import { Logtail } from '@logtail/node';
+import { LogtailTransport } from '@logtail/winston';
 
 @injectable()
 export class LoggerService implements ILogger {
   private logger: winston.Logger;
   private context: string;
-  
+  private logtail: Logtail;
+
   constructor() {
     this.context = 'App';
-    
+
+    this.logtail = new Logtail(process.env.BETTER_STACK_SOURCE_TOKEN!, {
+      endpoint: `https://${process.env.BETTER_STACK_SOURCE_HOST}`
+    });
+
     // Determine if we should show context based on environment variable
     const showContext = process.env.NODE_ENV === 'production';
-    
+
     // Create console format with optional context
     const consoleFormat = winston.format.combine(
       winston.format.colorize({ all: true }),
@@ -20,11 +27,21 @@ export class LoggerService implements ILogger {
       winston.format.printf(({ level, message, timestamp, context, ...meta }) => {
         // Only include context if showContext is true
         const ctx = showContext ? `[${context || this.context}] ` : '';
-        const metaStr = Object.keys(meta).length ? 
+        const metaStr = Object.keys(meta).length ?
           `\n${JSON.stringify(meta, null, 2)}` : '';
         return `[${timestamp}] [${level}] ${ctx}${message}${metaStr}`;
       })
     );
+
+    const transports: winston.transport[] = [
+      new winston.transports.Console({
+        format: consoleFormat
+      }),
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+      transports.push(new LogtailTransport(this.logtail));
+    }
 
     this.logger = winston.createLogger({
       level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
@@ -35,28 +52,17 @@ export class LoggerService implements ILogger {
         winston.format.json()
       ),
       defaultMeta: process.env.NODE_ENV === 'production' ? { service: 'olx-service' } : {},
-      transports: [
-        new winston.transports.Console({
-          format: consoleFormat
-        }),
-        // new winston.transports.File({ 
-        //   filename: 'logs/error.log', 
-        //   level: 'error' 
-        // }),
-        // new winston.transports.File({ 
-        //   filename: 'logs/combined.log' 
-        // })
-      ]
+      transports
     });
   }
 
   private formatMetadata(context: string, metadata?: any): any {
     const baseMetadata = { context };
-    
+
     if (!metadata) {
       return baseMetadata;
     }
-    
+
     if (metadata instanceof Error) {
       return {
         ...baseMetadata,
@@ -67,7 +73,7 @@ export class LoggerService implements ILogger {
         }
       };
     }
-    
+
     return { ...baseMetadata, ...metadata };
   }
 
@@ -89,5 +95,16 @@ export class LoggerService implements ILogger {
   debug(message: string, metadata?: any): void {
     const context = metadata?.context || 'App';
     this.logger.debug(message, this.formatMetadata(context, metadata));
+  }
+
+  public async flush(): Promise<void> {
+    try {
+      if (this.logtail) {
+        await this.logtail.flush();
+        console.log('Logtail logs flushed successfully');
+      }
+    } catch (error) {
+      console.error('Error flushing Logtail logs:', error);
+    }
   }
 }
