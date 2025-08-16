@@ -16,7 +16,7 @@ export class LoggerService implements ILogger {
     // Create console format with optional context
     const consoleFormat = winston.format.combine(
       winston.format.colorize({ all: true }),
-      winston.format.timestamp({ format: 'HH:mm:ss' }),
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       winston.format.printf(({ level, message, timestamp, context, ...meta }) => {
         // Only include context if showContext is true
         const ctx = showContext ? `[${context || this.context}] ` : '';
