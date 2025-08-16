@@ -46,6 +46,9 @@ await esbuild.build({
     'chart.js',
     'canvas',
     'chartjs-plugin-datalabels',
+    '@logtail/node',
+    '@logtail/winston',
+
     // Node built-ins
     'path',
     'fs',
